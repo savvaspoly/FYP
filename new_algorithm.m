@@ -1,0 +1,24 @@
+function x_new=new_algorithm(D_n,yy,x_tls,x_bpdn,x_bpdn1,K,idx_y) 
+    M=size(D_n,1);
+    N=size(D_n,2);
+    %Perform the three fusion methods
+    [xfm1,D1] = fusion_method2(D_n,yy,x_tls,x_bpdn,K,0.5);
+    [xfm2,D2] = fusion_method1(D_n,yy,x_tls,x_bpdn,K,0.5);
+    [xfm3,D3] = fusion_method3(D_n,yy,x_tls,x_bpdn,K,0.5);
+    if (K <= ((M/2)-2))
+    %perform the extended fusion method 1
+    x_tls1 = fri_extrapolate_fourier_tls_real(yy, N,7, K+2, idx_y);
+    [~,D4] = fusion_method1(D_n,yy,x_tls1,x_bpdn1,K,0.5); 
+    A=[D1,D2,D3,D4];
+    C=[x_tls,x_bpdn,x_tls1,x_bpdn1];
+    [xm1,xm2] = fusion_method1_ext(D_n,yy,A,C,K);
+    x_new=(xm1+xm2)/2;
+    else
+    %Least RMSE approach if K>(M/2 - 2)
+    A=[xfm1,xfm2,xfm3];
+    yyy=[yy,yy,yy];
+    RMSE=sqrt(mean(abs((yyy - D_n*A).^2)));
+    [~,II]=min(RMSE);
+    x_new=A(:,II);
+    end  
+end
